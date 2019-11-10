@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize')
-const { LivroCaixa } = require('../../models');
+const LivroCaixa = require('../../models/LivroCaixa');
 const {Op} = Sequelize;
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 let mes_atual = {
