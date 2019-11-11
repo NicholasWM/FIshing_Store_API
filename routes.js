@@ -34,8 +34,14 @@ routes.get('/produtos', ProdutosController.list_all)
 //Compras
 routes.post('/compras', ComprasController.inserir_compra)
 routes.post('/:compra_id/inserir', ComprasController.adicionar_a_compra)
+routes.post('/:compra_id/:item_id', ComprasController.atualizar_item_compra)
+
 routes.get('/compras', ComprasController.list_all)
+routes.get('/compras/abertas', ComprasController.lista_compras_abertas)
 routes.get('/:compra_id/compra', ComprasController.listar_pedidos_compra)
+
+routes.delete('/:compra_id/:item_id', ComprasController.apagar_item_compra)
+routes.delete('/:compra_id', ComprasController.apagar_compra)
 
 
 module.exports = routes
