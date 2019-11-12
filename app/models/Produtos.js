@@ -7,6 +7,7 @@ class Produtos extends Model {
             preco: DataTypes.FLOAT,
             categoria: DataTypes.STRING,
             imagem: DataTypes.STRING,
+            quantidade: DataTypes.FLOAT,
         }, {
             sequelize,
             tableName: 'Produtos'
