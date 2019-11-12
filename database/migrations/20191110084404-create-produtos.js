@@ -35,6 +35,11 @@ module.exports = {
         allowNull: true,
         type: Sequelize.STRING
       },
+      quantidade: {
+        allowNull: true,
+        defaultValue: 0,
+        type: Sequelize.FLOAT
+      },
     });
   },
 

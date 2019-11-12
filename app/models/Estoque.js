@@ -3,9 +3,9 @@ const { Model, DataTypes } = require('sequelize');
 class Estoque extends Model {
     static init(sequelize) {
         super.init({
-            nome: DataTypes.STRING,
-            barqueiro: DataTypes.STRING,
-            pago: DataTypes.BOOLEAN,
+            modo: DataTypes.STRING,
+            preco: DataTypes.FLOAT,
+            quantidade: DataTypes.FLOAT,
         }, {
             sequelize,
             tableName: 'Estoque'
