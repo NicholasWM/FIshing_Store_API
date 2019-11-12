@@ -2,6 +2,7 @@ const UserController = require('./app/controllers/user');
 const LivroCaixaController = require('./app/controllers/livro_caixa');
 const ProdutosController = require('./app/controllers/produto');
 const ComprasController = require('./app/controllers/compra');
+const EstoqueController = require('./app/controllers/estoque');
 const express = require('express');
 const routes = express.Router();
 const multer = require('multer')
@@ -42,6 +43,11 @@ routes.get('/:compra_id/compra', ComprasController.listar_pedidos_compra)
 
 routes.delete('/:compra_id/:item_id', ComprasController.apagar_item_compra)
 routes.delete('/:compra_id', ComprasController.apagar_compra)
+
+//Estoque
+routes.get('/estoque', EstoqueController.listar_mes_atual)
+routes.get('/estoque/mesAtual', EstoqueController.listar)
+// routes.post('/estoque', EstoqueController.listar_mes_atual)
 
 
 module.exports = routes
