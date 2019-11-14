@@ -9,8 +9,8 @@ const multer = require('multer')
 
 const uploadConfig = require('./config/upload')
 
-
 const upload = multer(uploadConfig)
+
 // USER
 routes.post('/register', UserController.register);
 routes.put('/users/:id/', UserController.update); //Editar
@@ -34,20 +34,20 @@ routes.get('/produtos', ProdutosController.list_all)
 
 //Compras
 routes.post('/compras', ComprasController.inserir_compra)
-routes.post('/:compra_id/inserir', ComprasController.adicionar_a_compra)
-routes.post('/:compra_id/:item_id', ComprasController.atualizar_item_compra)
+routes.post('/compras/:compra_id/inserir', ComprasController.adicionar_a_compra)
+routes.post('/compras/:compra_id/:item_id', ComprasController.atualizar_item_compra)
 
 routes.get('/compras', ComprasController.list_all)
 routes.get('/compras/abertas', ComprasController.lista_compras_abertas)
-routes.get('/:compra_id/compra', ComprasController.listar_pedidos_compra)
+routes.get('/compras/:compra_id/compra', ComprasController.listar_pedidos_compra)
 
-routes.delete('/:compra_id/:item_id', ComprasController.apagar_item_compra)
-routes.delete('/:compra_id', ComprasController.apagar_compra)
+routes.delete('/compras/:compra_id/:item_id', ComprasController.apagar_item_compra)
+routes.delete('/compras/:compra_id', ComprasController.apagar_compra)
 
-//Estoque
+// Estoque
 routes.get('/estoque', EstoqueController.listar_mes_atual)
 routes.get('/estoque/mesAtual', EstoqueController.listar)
-// routes.post('/estoque', EstoqueController.listar_mes_atual)
+routes.post('/estoque/registro', EstoqueController.inserir_registro)
 
 
 module.exports = routes

@@ -8,7 +8,6 @@ const {
 } = require('../helpers/consultaDatas')
 module.exports = {
     transacao:async (req, res)=> {
-        console.log(req.body)
         const registro = await LivroCaixa.create(req.body)
         res.json(registro)
     },
