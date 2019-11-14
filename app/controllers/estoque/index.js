@@ -1,5 +1,6 @@
 const Estoque = require('../../models/Estoque');
 const Produtos = require('../../models/Produtos');
+const { adiciona_ao_estoque, retira_do_estoque } = require('../helpers/estoqueHelper')
 const {
     mes_atual,
     mes_passado,
@@ -15,44 +16,34 @@ module.exports = {
         })
         res.json(estoque)
     },
+    listar_semana_atual:async(req, res)=>{
+        const estoque= await Estoque.findAll({
+            where: { createdAt: semana_atual }
+        })
+        res.json(estoque)
+    },
     listar:async(req, res)=>{
         const estoque= await Estoque.findAll()
         res.json(estoque)
     },
     inserir_registro: async(req, res)=>{
         if(!!!req.body){
-            return res.status(400).send({'msg':""})
+            return res.send({'msg':""})
         }
-        const {produto_id, modo, quantidade} = req.body
+        const {produto_id, modo} = req.body
 
         const produto = await Produtos.findByPk(produto_id)
         if(!produto){
-            return res.status(400).send({"msg": "Produto não existe"})
+            return res.send({"msg": "Produto não existe"})
         }
 
         if (modo.toLowerCase() != "entrada" && modo.toLowerCase() != "saida") {
-            return res.status(400).send({'msg': "modo inválido!"})
+            return res.send({'msg': "modo inválido!"})
         }
 
-        modo.toLowerCase() == "entrada" ? adiciona_ao_estoque(produto, quantidade, req.body.custo) : retira_do_estoque(produto, quantidade)
+        modo.toLowerCase() == "entrada" ? adiciona_ao_estoque(produto, req.body, 1) : retira_do_estoque(produto, req.body, 1)
 
         return res.json(produto)
-
-        async function adiciona_ao_estoque(produto, quantidade, custo) {
-            if(!custo){
-                return res.json({'msg': "Custo inexistente"})
-            }
-            await produto.update({ quantidade: produto.quantidade + quantidade })
-            await Estoque.create({ produto_id, modo, preco: custo, quantidade })
-        }
-        async function retira_do_estoque(produto, quantidade) {
-            if (quantidade > produto.quantidade) {
-                return res.status(400).send({ 'msg': "Itens insuficientes no estoque" })
-            }
-            await produto.update({ quantidade: produto.quantidade - quantidade })
-            await Estoque.create({ produto_id, modo, preco: produto.preco * quantidade, quantidade })
-        }
-
     }
     
 }
