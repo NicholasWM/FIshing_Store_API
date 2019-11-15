@@ -39,6 +39,7 @@ routes.post('/compras/:compra_id/:item_id', ComprasController.atualizar_item_com
 
 routes.get('/compras', ComprasController.list_all)
 routes.get('/compras/abertas', ComprasController.lista_compras_abertas)
+routes.get('/compras/dia', ComprasController.lista_compras_dia)
 routes.get('/compras/:compra_id/compra', ComprasController.listar_pedidos_compra)
 
 routes.delete('/compras/:compra_id/:item_id', ComprasController.apagar_item_compra)

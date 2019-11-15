@@ -139,7 +139,7 @@ module.exports = {
         res.json(compras)
     },
     lista_compras_dia: async(req,res)=>{
-        const compras = await Compras.findAll({ where: { createAt: dia_atual } })
+        const compras = await Compras.findAll({ where: { createdAt: dia_atual } })
         res.json(compras)
     } 
 }
