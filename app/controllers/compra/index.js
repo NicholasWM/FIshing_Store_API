@@ -96,7 +96,14 @@ module.exports = {
     },
     listar_pedidos_compra: async(req, res) => {
         const { compra_id } = req.params;
-        const compra = await listar_compra_por_id(compra_id)
+        const itens = await listar_compra_por_id(compra_id)
+        const dados_compra = await Compras.findByPk(compra_id)
+        let compra = {
+            dados:dados_compra,
+            itens: itens,
+            total: itens.reduce((prevVal, elem) => prevVal + elem.preco_total, 0 )
+        }
+        
         
         return res.json(compra)
     },
