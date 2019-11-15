@@ -26,4 +26,4 @@ let semana_passada = {
     [Op.gt]: new Date(`${new Date().getDate() - 14} ${months[new Date().getMonth()]} ${new Date().getFullYear()}`).toJSON()
 }
 
-module.exports = {mes_atual, mes_passado, mes_retrasado,semana_atual,semana_passada}
+module.exports = { mes_atual, mes_passado, mes_retrasado, semana_atual, semana_passada, dia_atual}
