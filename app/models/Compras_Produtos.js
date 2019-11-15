@@ -13,6 +13,12 @@ class Compras_Produtos extends Model {
     static associate(models) {
         this.belongsTo(models.Compras, { foreignKey: 'compra_id', as: 'compra' });
         this.belongsTo(models.Produtos, { foreignKey: 'produto_id', as: 'produto' });
+
+        // this.hasOne(models.Estoque, { foreignKey: 'estoque_id', targetKey: 'id' });
+
+        this.belongsTo(models.Estoque, { foreignKey: 'estoque_id' });
+
+
     }
 }
 

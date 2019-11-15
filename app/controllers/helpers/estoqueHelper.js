@@ -13,8 +13,7 @@ async function retira_do_estoque(produto, novo_registro, log_res) {
         return log_res ? res.send({ 'msg': "Itens insuficientes no estoque" }): false
     }
     await produto.update({ quantidade: produto.quantidade - quantidade })
-    await Estoque.create({ produto_id, modo:"saida", preco: produto.preco * quantidade, quantidade })
-    return true
+    return await Estoque.create({ produto_id, modo:"saida", preco: produto.preco * quantidade, quantidade }).then(estoque => estoque.id)
 }
 
 module.exports = {

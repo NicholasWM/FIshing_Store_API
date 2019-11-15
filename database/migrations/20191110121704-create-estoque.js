@@ -28,8 +28,9 @@ module.exports = {
         allowNull: false,
         references: { model: 'produtos', key: 'id' },
         onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT',
+        onDelete: 'CASCADE',
       },
+
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });

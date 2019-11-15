@@ -40,6 +40,7 @@ module.exports = {
         defaultValue: 0,
         type: Sequelize.FLOAT
       },
+
     });
   },
 

@@ -17,6 +17,10 @@ let semana_atual = {
     [Op.lt]: new Date(`${new Date().getDate() + 1} ${months[new Date().getMonth()]} ${new Date().getFullYear()}`).toJSON(),
     [Op.gt]: new Date(`${new Date().getDate() - 7} ${months[new Date().getMonth()]} ${new Date().getFullYear()}`).toJSON()
 }
+let dia_atual = {
+    [Op.lt]: new Date(`${new Date().getDate() + 1} ${months[new Date().getMonth()]} ${new Date().getFullYear()}`).toJSON(),
+    [Op.gt]: new Date(`${new Date().getDate()} ${months[new Date().getMonth()]} ${new Date().getFullYear()}`).toJSON()
+}
 let semana_passada = {
     [Op.lt]: new Date(`${new Date().getDate() - 7} ${months[new Date().getMonth()]} ${new Date().getFullYear()}`).toJSON(),
     [Op.gt]: new Date(`${new Date().getDate() - 14} ${months[new Date().getMonth()]} ${new Date().getFullYear()}`).toJSON()

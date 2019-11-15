@@ -31,6 +31,13 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      estoque_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: { model: 'estoque', key: 'id' },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
       createdAt: Sequelize.DATE,
       updatedAt: Sequelize.DATE,
     });
