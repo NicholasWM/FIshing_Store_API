@@ -1,6 +1,7 @@
 const Compras = require('../../models/Compras');
 const Estoque = require('../../models/Estoque');
 const Produtos = require('../../models/Produtos');
+const LivroCaixa = require('../../models/LivroCaixa');
 const Compras_Produtos = require('../../models/Compras_Produtos');
 const { adiciona_ao_estoque, retira_do_estoque } = require('../helpers/estoqueHelper')
 const { dia_atual} = require('../helpers/consultaDatas')
@@ -71,6 +72,15 @@ const listar_compra_por_id = async(compra_id)=>{
             },
         ]
     })
+}
+const preco_total_compra_por_id = async(compra_id)=>{
+    let itens = await Compras_Produtos.findAll({
+        where: {
+            compra_id
+        },
+        attributes: ['id', 'quantidade', 'preco_total'],
+    })
+    return itens.reduce((prevVal, elem) => prevVal + elem.preco_total, 0)
 }
 
 module.exports = {
@@ -148,5 +158,37 @@ module.exports = {
     lista_compras_dia: async(req,res)=>{
         const compras = await Compras.findAll({ where: { createdAt: dia_atual } })
         res.json(compras)
-    } 
+    },
+    pagar: async (req, res)=>{
+        const {valor, modo, tipo_transacao} = req.body
+        const {compra_id} = req.params
+        const compra = await Compras.findByPk(compra_id)
+        if(compra.pago){
+            return res.json({"msg": "Conta já está paga!"})
+        }
+        
+        const total_pago = await retorna_valor_já_pago(compra_id)
+        const total = await preco_total_compra_por_id(compra_id)
+        
+        let falta = total - total_pago
+        if (valor <= total - total_pago){
+            falta = falta - valor 
+            await LivroCaixa.create({ valor, modo, tipo_transacao , compra_id })
+        }
+        if(falta == 0){
+            compra.update({pago: 1})
+        }
+
+        return res.json({'falta':falta })
+
+        async function retorna_valor_já_pago(compra_id){
+            let pago = await LivroCaixa.findAll({ where: { compra_id } })
+
+            let total_pago = 0
+            if (pago.length) {
+                total_pago = pago.reduce((prevVal, elem) => prevVal + elem.valor, 0)
+            }
+            return total_pago
+        }
+    }
 }
