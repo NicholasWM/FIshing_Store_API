@@ -12,6 +12,11 @@ const {
 module.exports = {
     listar_mes_atual:async(req, res)=>{
         const estoque= await Estoque.findAll({
+            attributes: ["id", 'modo', 'preco', 'quantidade', "createdAt"],
+            include: [{
+                association: 'produto',
+                attributes: ['id','nome','quantidade']
+            }],
             where: { createdAt: mes_atual }
         })
         res.json(estoque)
