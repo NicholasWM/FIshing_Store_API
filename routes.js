@@ -27,6 +27,7 @@ routes.get('/livro_caixa/mes_passado', LivroCaixaController.listar_mes_passado)
 routes.get('/livro_caixa/mes_retrasado', LivroCaixaController.listar_mes_retrasado)
 routes.get('/livro_caixa/semana_atual', LivroCaixaController.listar_semana_atual)
 routes.get('/livro_caixa/semana_passada', LivroCaixaController.listar_semana_passada)
+routes.get('/livro_caixa/resumo/:compra_id/compra', LivroCaixaController.resumo_compra_individual)
 
 //Produtos
 routes.post('/produtos', upload.single('picture'),ProdutosController.inserir_produto)
@@ -47,9 +48,12 @@ routes.delete('/compras/:compra_id/:item_id', ComprasController.apagar_item_comp
 routes.delete('/compras/:compra_id', ComprasController.apagar_compra)
 
 // Estoque
-routes.get('/estoque', EstoqueController.listar_mes_atual)
-routes.get('/estoque/mesAtual', EstoqueController.listar)
+routes.get('/estoque', EstoqueController.listar)
+routes.get('/estoque/mesAtual', EstoqueController.listar_mes_atual)
 routes.post('/estoque/registro', EstoqueController.inserir_registro)
 
+
+//Teste Socket
+routes.get('/socket', ComprasController.testeSocket)
 
 module.exports = routes

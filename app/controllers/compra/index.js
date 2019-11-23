@@ -4,6 +4,7 @@ const Produtos = require('../../models/Produtos');
 const LivroCaixa = require('../../models/LivroCaixa');
 const Compras_Produtos = require('../../models/Compras_Produtos');
 const { adiciona_ao_estoque, retira_do_estoque } = require('../helpers/estoqueHelper')
+const { preco_total_compra_por_id, retorna_valor_já_pago } = require('../helpers/compraProduto')
 const { dia_atual} = require('../helpers/consultaDatas')
 
 const insere_produtos_na_compra = async (registros, compra_id) =>{
@@ -65,23 +66,11 @@ const listar_compra_por_id = async(compra_id)=>{
             {
                 association: 'produto',
                 attributes: ['nome', 'preco', 'categoria', 'imagem'],
-            },
-            {
-                association: 'compra',
-                attributes: ['nome', 'barqueiro', 'createdAt'],
-            },
+            }
         ]
     })
 }
-const preco_total_compra_por_id = async(compra_id)=>{
-    let itens = await Compras_Produtos.findAll({
-        where: {
-            compra_id
-        },
-        attributes: ['id', 'quantidade', 'preco_total'],
-    })
-    return itens.reduce((prevVal, elem) => prevVal + elem.preco_total, 0)
-}
+
 
 module.exports = {
     inserir_compra: async (req, res) => {
@@ -180,15 +169,11 @@ module.exports = {
         }
 
         return res.json({'falta':falta })
+    },
+    testeSocket: async (req, res)=>{
 
-        async function retorna_valor_já_pago(compra_id){
-            let pago = await LivroCaixa.findAll({ where: { compra_id } })
+        await req.io.emit('testando', req.body.msg);
 
-            let total_pago = 0
-            if (pago.length) {
-                total_pago = pago.reduce((prevVal, elem) => prevVal + elem.valor, 0)
-            }
-            return total_pago
-        }
+        return res.json({'msg':1})
     }
 }
