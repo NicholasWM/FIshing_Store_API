@@ -25,7 +25,7 @@ module.exports = {
     },
     list_categorias: async (req, res)=>{
         const produtos =  await Produtos.findAll({
-            attributes:['id','nome', 'quantidade', 'categoria']
+            attributes:['id','nome', 'quantidade', 'categoria', "imagem", "preco"]
         })
         let categorias = []
         produtos.filter(produto => {

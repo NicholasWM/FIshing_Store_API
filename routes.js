@@ -32,6 +32,7 @@ routes.get('/livro_caixa/resumo/:compra_id/compra', LivroCaixaController.resumo_
 //Produtos
 routes.post('/produtos', upload.single('picture'),ProdutosController.inserir_produto)
 routes.get('/produtos', ProdutosController.list_all)
+routes.get('/produtos/categorias', ProdutosController.list_categorias)
 
 //Compras
 routes.post('/compras', ComprasController.inserir_compra)
