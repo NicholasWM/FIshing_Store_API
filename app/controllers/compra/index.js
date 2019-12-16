@@ -7,21 +7,93 @@ const { adiciona_ao_estoque, retira_do_estoque } = require('../helpers/estoqueHe
 const { preco_total_compra_por_id, retorna_valor_já_pago } = require('../helpers/compraProduto')
 const { dia_atual} = require('../helpers/consultaDatas')
 
-const insere_produtos_na_compra = async (registros, compra_id) =>{
-    let results = await registros.map(async (registro) => {
-        let produto = await Produtos.findByPk(registro.produto_id)
-        if(produto){
-            let estoque_id = await retira_do_estoque(produto, registro)
-            if(estoque_id){
-                let { quantidade, produto_id } = registro
-                await Compras_Produtos.create({
-                    estoque_id,quantidade, preco_total: produto.preco*quantidade, produto_id, compra_id
-                })
-            return true
-        }}
-        return false
+const nota_completa_das_compras = async (compras) => {
+    // COMPRAS TEM DE SER UM ARRAY DE OBJETOS RETORNADO PELO BANCO COMPRAS
+    console.log("ID: ", JSON.stringify(compras))
+    // console.log("COMPRAS",compras)
+    let compras_id = compras.map(compra => compra.id)
+    // console.log("COMPRAS", JSON.stringify(compras));
+
+    let compras_produtos = await Compras_Produtos.findAll({
+        where: {
+            compra_id: [...compras_id],
+
+        }
     })
-    console.log(results);
+
+    const response =  compras.map(compra => {
+        // console.log("COMPRA MAP: ", compra)
+        const produtos = compras_produtos.filter(prod => compra.id == prod.compra_id)
+        // console.log(JSON.stringify(produtos.reduce((prevVal, elem) => prevVal + elem.preco_total, 0)
+        // ))
+        // console.log("produtos",produtos)
+        let categorias = []
+        produtos.filter(produto => {
+            // console.log("CATEGORIAS", JSON.stringify(produto))
+            if (!categorias.filter(categoria => {
+                if (produto.categoria == categoria.categoria) {
+                    categoria.produtos.push(produto)
+                }
+                return produto.categoria == categoria.categoria
+            }).length) {
+                return categorias.push({ categoria: produto.categoria, produtos: [produto] })
+            }
+        })
+    
+        return {
+            "id": compra.id,
+            "nome": compra.nome,
+            "barqueiro": compra.barqueiro,
+            "pago": compra.pago,
+            "createdAt": compra.createdAt,
+            "updatedAt": compra.updatedAt,
+            "produtos": (() => {
+    
+                const result_produtos = compra.produtos.map((produto, index, array) => {
+    
+                    let compra = { id: produto.id, nome: produto.nome, categoria: produto.categoria, dados: produtos.filter(prod => prod.produto_id == produto.id) }
+                    // console.log("CATEGORIAS", JSON.stringify(compra))
+    
+                    return compra
+                })
+                let categorias = []
+                result_produtos.filter(produto => {
+                    if (!categorias.filter(categoria => {
+                        if (produto.categoria == categoria.categoria) {
+                            categoria.produtos.push(produto)
+                        }
+                        return produto.categoria == categoria.categoria
+                    }).length) {
+                        return categorias.push({ categoria: produto.categoria, produtos: [produto] })
+                    }
+                })
+                // console.log("CATEGORIAS", JSON.stringify(categorias))
+                return categorias
+            })(),
+            "preco_total": produtos.reduce((prevVal, elem) => prevVal + elem.preco_total, 0)
+        }
+    })
+    console.log("RESPONSE: ",JSON.stringify(response));
+    return response
+    
+}
+
+const insere_produtos_na_compra = async (registros, compra_id) =>{
+    let produtos_criados = []
+        registros.map(async (registro) => {
+            let produto = await Produtos.findByPk(registro.produto_id)
+            if(produto){
+                let estoque_id = await retira_do_estoque(produto, registro)
+                if(estoque_id){
+                    let { quantidade, produto_id } = registro
+                    await Compras_Produtos.create({
+                        estoque_id,quantidade, preco_total: produto.preco*quantidade, produto_id, compra_id
+                    })
+                return true
+            }}
+            return false
+        })
+        // console.log(results);
 }
 
 const atualizar_item_compra = async (item_id, quantidade)=>(
@@ -70,18 +142,42 @@ const listar_compra_por_id = async(compra_id)=>{
         ]
     })
 }
-
+const lista_compras_abertas = async (req, res) => {
+    let compras = await Compras.findAll({
+        where: { pago: false },
+        include: [{
+            association: 'produtos',
+            attributes: ['nome', "id", "categoria"]
+        }],
+    })
+    let compras_com_produtos = await nota_completa_das_compras(compras)
+    res.json(compras_com_produtos)
+}
 
 module.exports = {
+    lista_compras_abertas,
     inserir_compra: async (req, res) => {
         const { nome, barqueiro, pago, produtos } = req.body
-        
-        const compra = await Compras.create({
+        let compra = await Compras.create({
             nome,barqueiro,pago
         })
-        // return res.json({ ok: produto })
         await insere_produtos_na_compra(produtos, compra.id)
-        return res.json(compra.id)
+        let lista_compras = 0
+        setTimeout(async ()=> {
+            lista_compras = await Compras.findOne({
+                where: { id: compra.id },
+                include: [{
+                    association: 'produtos',
+                    attributes: ['nome', "id", "categoria"]
+                }],
+            })
+            const compra_montada = await nota_completa_das_compras([lista_compras])
+            res.json(...compra_montada)
+        },1000)
+        console.log(JSON.stringify(compra));
+        // console.log("produtos_registrados ",produtos_registrados );
+        
+        // return res.json({compra, produtos_registrados})
     },
     list_all: async (req, res) => {
         let busca = await Compras.findAll()
@@ -139,10 +235,6 @@ module.exports = {
         // Apagar Compra Produto
         
         // res.status(200).send()
-    },
-    lista_compras_abertas: async (req, res)=>{
-        const compras = await Compras.findAll({where:{pago:false}})
-        res.json(compras)
     },
     lista_compras_dia: async(req,res)=>{
         const compras = await Compras.findAll({ where: { createdAt: dia_atual } })
