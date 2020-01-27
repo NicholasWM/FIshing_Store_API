@@ -7,7 +7,7 @@ class Compras_Produtos extends Model {
             preco_total: DataTypes.FLOAT,
         }, {
             sequelize,
-            tableName: 'Compras_Produtos'
+            tableName: 'compras_produtos'
         })
     }
     static associate(models) {

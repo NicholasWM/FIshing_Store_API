@@ -34,7 +34,7 @@ module.exports = {
       compra_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'compras', key: 'id' },
+        references: { model: 'Compras', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'RESTRICT',
       },

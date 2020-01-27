@@ -12,7 +12,7 @@ module.exports = {
       produto_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'produtos', key: 'id' },
+        references: { model: 'Produtos', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
@@ -27,14 +27,14 @@ module.exports = {
       compra_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'compras', key: 'id' },
+        references: { model: 'Compras', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       estoque_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'estoque', key: 'id' },
+        references: { model: 'Estoque', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },

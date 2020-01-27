@@ -2,7 +2,7 @@
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('estoque', {
+    return queryInterface.createTable('Estoque', {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -26,7 +26,7 @@ module.exports = {
       produto_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'produtos', key: 'id' },
+        references: { model: 'Produtos', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
