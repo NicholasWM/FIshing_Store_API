@@ -79,11 +79,14 @@ const nota_completa_das_compras = async (compras) => {
 }
 
 const insere_produtos_na_compra = async (registros, compra_id) =>{
+    // BUG DA COMPRA FECHADA RECEBENDO MAIS PEDIDOS E CONTINUANDO COM STATUS DE PAGA
     let produtos_criados = []
         registros.map(async (registro) => {
             let produto = await Produtos.findByPk(registro.produto_id)
             if(produto){
-                let estoque_id = await retira_do_estoque(produto, registro)
+                let estoque = await retira_do_estoque(produto, registro)
+                let estoque_id = estoque.id
+                console.log(estoque_id)
                 if(estoque_id){
                     let { quantidade, produto_id } = registro
                     await Compras_Produtos.create({
@@ -187,7 +190,10 @@ module.exports = {
         
         const { compra_id } = req.params;
         const registros = req.body
-        res.json(await insere_produtos_na_compra(registros, compra_id))
+        // Atualizar estado da conta
+        const compra = await Compras.findByPk(compra_id)
+        compra.update({pago: 0})
+        return res.json(await insere_produtos_na_compra(registros, compra_id))
     },
     listar_pedidos_compra: async(req, res) => {
         const { compra_id } = req.params;
@@ -244,23 +250,37 @@ module.exports = {
         const {valor, modo, tipo_transacao} = req.body
         const {compra_id} = req.params
         const compra = await Compras.findByPk(compra_id)
-        if(compra.pago){
-            return res.json({"msg": "Conta já está paga!"})
-        }
+        // ->> O estado da Conta
+        // ->> Oque foi pago X preco total X oque vai ser pago
+
+        // Verifica se a conta está paga
+        if(compra.pago) return res.json({"msg": "Conta já está paga!"})
         
+        // Calcula valor total da conta e quanto foi pago
         const total_pago = await retorna_valor_já_pago(compra_id)
         const total = await preco_total_compra_por_id(compra_id)
         
+        // Registra quanto falta para ser pago
         let falta = total - total_pago
-        if (valor <= total - total_pago){
-            falta = falta - valor 
+        let troco = 0
+        // Verifica se o valor que está sendo pago é menor ou igual ao que falta
+        if (valor < falta){
+            //Atualiza o valor q falta para ser pago
+            falta = falta - valor
+            // Registra entrada no caixa
             await LivroCaixa.create({ valor, modo, tipo_transacao , compra_id })
+        }else{
+            troco = valor - falta
+            await LivroCaixa.create({ valor: (troco > 0) ? falta : valor, modo, tipo_transacao , compra_id })
+            falta = 0
         }
         if(falta == 0){
             compra.update({pago: 1})
         }
-
+        
+        if(troco) return res.json({troco })
         return res.json({'falta':falta })
+
     },
     testeSocket: async (req, res)=>{
 
