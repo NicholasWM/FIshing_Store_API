@@ -52,6 +52,7 @@ routes.delete('/compras/:compra_id', ComprasController.apagar_compra)
 routes.get('/estoque', EstoqueController.listar)
 routes.get('/estoque/mesAtual', EstoqueController.listar_mes_atual)
 routes.post('/estoque/registro', EstoqueController.inserir_registro)
+routes.get('/estoque/:produto_id/registros', EstoqueController.listar_por_id_produto)
 
 
 //Teste Socket

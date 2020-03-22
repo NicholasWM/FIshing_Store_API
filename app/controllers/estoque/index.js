@@ -45,10 +45,14 @@ module.exports = {
         if (modo.toLowerCase() != "entrada" && modo.toLowerCase() != "saida") {
             return res.send({'msg': "modo inválido!"})
         }
-
+        
         modo.toLowerCase() == "entrada" ? adiciona_ao_estoque(produto, req.body, 1) : retira_do_estoque(produto, req.body, 1)
-
-        return res.json(produto)
+        const {id, nome, preco, quantidade, categoria, createdAt} = produto
+        return res.json({id, nome, preco, quantidade, categoria, createdAt})
+    },
+    listar_por_id_produto: async(req, res) => {
+        const {produto_id} = req.params
+        const result = await Estoque.findAll({raw:true, where:{produto_id}})
+        return res.json([...result])
     }
-    
 }

@@ -21,7 +21,6 @@ io.on('connection', socket => {
 app.use((req, res, next) => {
     req.io = io;
     req.connectedUsers = connectedUsers;
-    
 
     return next();
 })
