@@ -253,8 +253,6 @@ module.exports = {
         // ->> O estado da Conta
         // ->> Oque foi pago X preco total X oque vai ser pago
 
-        // Verifica se a conta está paga
-        if(compra.pago) return res.json({"msg": "Conta já está paga!"})
         
         // Calcula valor total da conta e quanto foi pago
         const total_pago = await retorna_valor_já_pago(compra_id)
@@ -262,6 +260,9 @@ module.exports = {
         
         // Registra quanto falta para ser pago
         let falta = total - total_pago
+        // Verifica se a conta está paga
+        if(compra.pago || falta == 0){compra.update({pago: 1});return res.json({"msg": "Conta já está paga!"})}
+        
         let troco = 0
         // Verifica se o valor que está sendo pago é menor ou igual ao que falta
         if (valor < falta){
@@ -274,9 +275,7 @@ module.exports = {
             await LivroCaixa.create({ valor: (troco > 0) ? falta : valor, modo, tipo_transacao , compra_id })
             falta = 0
         }
-        if(falta == 0){
-            compra.update({pago: 1})
-        }
+        if(falta == 0) compra.update({pago: 1})
         
         if(troco) return res.json({troco })
         return res.json({'falta':falta })

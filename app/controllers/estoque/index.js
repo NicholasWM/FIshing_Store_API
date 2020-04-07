@@ -28,7 +28,10 @@ module.exports = {
         res.json(estoque)
     },
     listar:async(req, res)=>{
-        const estoque= await Estoque.findAll()
+        const estoque= await Estoque.findAll({
+            include:[{model: Produtos, as:'produto', attributes:['nome','imagem']}],
+            order:[['id', 'DESC']]
+        })
         res.json(estoque)
     },
     inserir_registro: async(req, res)=>{
