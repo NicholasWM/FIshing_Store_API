@@ -28,7 +28,10 @@ module.exports = {
         res.json(estoque)
     },
     listar:async(req, res)=>{
-        const estoque= await Estoque.findAll()
+        const estoque= await Estoque.findAll({
+            include:[{model: Produtos, as:'produto', attributes:['nome','imagem']}],
+            order:[['id', 'DESC']]
+        })
         res.json(estoque)
     },
     inserir_registro: async(req, res)=>{
@@ -36,6 +39,7 @@ module.exports = {
             return res.send({'msg':""})
         }
         const {produto_id, modo} = req.body
+        console.log(req.body)
 
         const produto = await Produtos.findByPk(produto_id)
         if(!produto){
@@ -46,9 +50,10 @@ module.exports = {
             return res.send({'msg': "modo inválido!"})
         }
         
-        modo.toLowerCase() == "entrada" ? adiciona_ao_estoque(produto, req.body, 1) : retira_do_estoque(produto, req.body, 1)
-        const {id, nome, preco, quantidade, categoria, createdAt} = produto
-        return res.json({id, nome, preco, quantidade, categoria, createdAt})
+        const queryResult = modo.toLowerCase() == "entrada" ? await adiciona_ao_estoque(produto, req.body, 1) : await retira_do_estoque(produto, req.body, 1)
+        return res.json(queryResult)
+        // const {id, nome, preco, quantidade, categoria, createdAt} = produto
+        // return res.json({id, nome, preco, quantidade, categoria, createdAt})
     },
     listar_por_id_produto: async(req, res) => {
         const {produto_id} = req.params
