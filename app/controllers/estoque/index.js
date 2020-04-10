@@ -51,14 +51,13 @@ module.exports = {
         }
         
         const queryResult = modo.toLowerCase() == "entrada" ? await adiciona_ao_estoque(produto, req.body, 1) : await retira_do_estoque(produto, req.body, 1)
-        return res.json(queryResult)
-        // const {id, nome, preco, quantidade, categoria, createdAt} = produto
-        // return res.json({id, nome, preco, quantidade, categoria, createdAt})
+        return res.json({...queryResult.dataValues,produto:{nome: produto.nome, imagem:produto.imagem}})
     },
     listar_por_id_produto: async(req, res) => {
         const {produto_id} = req.params
         const result = await Estoque.findAll({
-            raw:true, 
+            // raw:true,
+            include:[{model: Produtos, as:'produto', attributes:['nome','imagem']}],
             where:{produto_id},
             order:[['createdAt', 'DESC']]
         })
