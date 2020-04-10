@@ -57,7 +57,11 @@ module.exports = {
     },
     listar_por_id_produto: async(req, res) => {
         const {produto_id} = req.params
-        const result = await Estoque.findAll({raw:true, where:{produto_id}})
+        const result = await Estoque.findAll({
+            raw:true, 
+            where:{produto_id},
+            order:[['createdAt', 'DESC']]
+        })
         return res.json([...result])
     }
 }
