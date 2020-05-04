@@ -1,12 +1,12 @@
 const LivroCaixa = require('../../models/LivroCaixa');
 const Compras_Produtos = require('../../models/Compras_Produtos');
 const Compras = require('../../models/Compras');
-const { 
+const {
     mes_atual,
     mes_passado,
     mes_retrasado,
     semana_atual,
-    semana_passada 
+    semana_passada
 } = require('../helpers/consultaDatas')
 const { preco_total_compra_por_id, retorna_valor_já_pago } = require('../helpers/compraProduto')
 
@@ -36,8 +36,9 @@ const resumo_compra_individual = async (compra_id) => {
 }
 module.exports = {
     transacao:async (req, res)=> {
-        const registro = await LivroCaixa.create(req.body)
-        res.json(registro)
+		console.log(req.body)
+		const registro = await LivroCaixa.create(req.body)
+        return res.json(registro)
     },
     apagar_transacao: (req, res) => {
         LivroCaixa.destroy({ where: { id: req.body.id } })
@@ -72,7 +73,7 @@ module.exports = {
     resumo_compra_individual: async(req, res) =>{
         const {compra_id} = req.params
         const registros = await resumo_compra_individual(compra_id)
-        
+
         res.json(registros)
-    } 
+    }
 }
