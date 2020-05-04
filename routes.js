@@ -1,11 +1,12 @@
+const express = require('express');
+const routes = express.Router();
+const multer = require('multer')
 const UserController = require('./app/controllers/user');
 const LivroCaixaController = require('./app/controllers/livro_caixa');
 const ProdutosController = require('./app/controllers/produto');
 const ComprasController = require('./app/controllers/compra');
 const EstoqueController = require('./app/controllers/estoque');
-const express = require('express');
-const routes = express.Router();
-const multer = require('multer')
+const Iluminacao = require('./app/controllers/iluminacao/Terraco')
 
 const uploadConfig = require('./config/upload')
 
@@ -54,8 +55,11 @@ routes.get('/estoque/mesAtual', EstoqueController.listar_mes_atual)
 routes.post('/estoque/registro', EstoqueController.inserir_registro)
 routes.get('/estoque/:produto_id/registros', EstoqueController.listar_por_id_produto)
 
-
 //Teste Socket
 routes.get('/socket', ComprasController.testeSocket)
+
+// Iluminação
+routes.post('/iluminacao/terraco', Iluminacao.terraco)
+routes.post('/iluminacao/quiosque', ()=>{})
 
 module.exports = routes
