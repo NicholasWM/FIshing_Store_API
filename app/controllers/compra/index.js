@@ -5,14 +5,13 @@ const LivroCaixa = require('../../models/LivroCaixa');
 const Compras_Produtos = require('../../models/Compras_Produtos');
 const { adiciona_ao_estoque, retira_do_estoque } = require('../helpers/estoqueHelper')
 const { preco_total_compra_por_id, retorna_valor_já_pago } = require('../helpers/compraProduto')
+const { resumo_compra_individual } = require('../helpers/livroCaixaHelper')
 const { dia_atual} = require('../helpers/consultaDatas')
 
 const nota_completa_das_compras = async (compras) => {
     // COMPRAS TEM DE SER UM ARRAY DE OBJETOS RETORNADO PELO BANCO COMPRAS
     console.log("ID: ", JSON.stringify(compras))
-    // console.log("COMPRAS",compras)
     let compras_id = compras.map(compra => compra.id)
-    // console.log("COMPRAS", JSON.stringify(compras));
 
     let compras_produtos = await Compras_Produtos.findAll({
         where: {
@@ -20,16 +19,10 @@ const nota_completa_das_compras = async (compras) => {
 
         }
     })
-
-    const response =  compras.map(compra => {
-        // console.log("COMPRA MAP: ", compra)
+    const response = compras.map((compra, index) => {
         const produtos = compras_produtos.filter(prod => compra.id == prod.compra_id)
-        // console.log(JSON.stringify(produtos.reduce((prevVal, elem) => prevVal + elem.preco_total, 0)
-        // ))
-        // console.log("produtos",produtos)
         let categorias = []
         produtos.filter(produto => {
-            // console.log("CATEGORIAS", JSON.stringify(produto))
             if (!categorias.filter(categoria => {
                 if (produto.categoria == categoria.categoria) {
                     categoria.produtos.push(produto)
@@ -39,7 +32,6 @@ const nota_completa_das_compras = async (compras) => {
                 return categorias.push({ categoria: produto.categoria, produtos: [produto] })
             }
         })
-    
         return {
             "id": compra.id,
             "nome": compra.nome,
@@ -48,12 +40,9 @@ const nota_completa_das_compras = async (compras) => {
             "createdAt": compra.createdAt,
             "updatedAt": compra.updatedAt,
             "produtos": (() => {
-    
+
                 const result_produtos = compra.produtos.map((produto, index, array) => {
-    
-                    let compra = { id: produto.id, nome: produto.nome, categoria: produto.categoria, dados: produtos.filter(prod => prod.produto_id == produto.id) }
-                    // console.log("CATEGORIAS", JSON.stringify(compra))
-    
+                    let compra = { id: produto.id, nome: produto.nome, categoria: produto.categoria, imagem: produto.imagem, dados: produtos.filter(prod => prod.produto_id == produto.id) }
                     return compra
                 })
                 let categorias = []
@@ -67,15 +56,13 @@ const nota_completa_das_compras = async (compras) => {
                         return categorias.push({ categoria: produto.categoria, produtos: [produto] })
                     }
                 })
-                // console.log("CATEGORIAS", JSON.stringify(categorias))
                 return categorias
-            })(),
+			})(),
             "preco_total": produtos.reduce((prevVal, elem) => prevVal + elem.preco_total, 0)
         }
     })
-    console.log("RESPONSE: ",JSON.stringify(response));
     return response
-    
+
 }
 
 const insere_produtos_na_compra = async (registros, compra_id) =>{
@@ -86,7 +73,6 @@ const insere_produtos_na_compra = async (registros, compra_id) =>{
             if(produto){
                 let estoque = await retira_do_estoque(produto, registro)
                 let estoque_id = estoque.id
-                console.log(estoque_id)
                 if(estoque_id){
                     let { quantidade, produto_id } = registro
                     await Compras_Produtos.create({
@@ -96,7 +82,6 @@ const insere_produtos_na_compra = async (registros, compra_id) =>{
             }}
             return false
         })
-        // console.log(results);
 }
 
 const atualizar_item_compra = async (item_id, quantidade)=>(
@@ -105,7 +90,7 @@ const atualizar_item_compra = async (item_id, quantidade)=>(
                 association: 'produto',
                 attributes: ['preco']
         }]
-    }).then(compra => 
+    }).then(compra =>
             compra.update({
                 quantidade,
                 preco_total: quantidade * compra.produto.preco
@@ -147,10 +132,11 @@ const listar_compra_por_id = async(compra_id)=>{
 }
 const lista_compras_abertas = async (req, res) => {
     let compras = await Compras.findAll({
-        where: { pago: false },
+		where: { pago: false },
+		order:[['id', 'DESC']],
         include: [{
             association: 'produtos',
-            attributes: ['nome', "id", "categoria"]
+            attributes: ['nome', "id", "categoria", 'imagem']
         }],
     })
     let compras_com_produtos = await nota_completa_das_compras(compras)
@@ -179,15 +165,23 @@ module.exports = {
         },1000)
         console.log(JSON.stringify(compra));
         // console.log("produtos_registrados ",produtos_registrados );
-        
+
         // return res.json({compra, produtos_registrados})
     },
     list_all: async (req, res) => {
-        let busca = await Compras.findAll()
-        return res.json(busca)
+        let compras = await Compras.findAll({
+			include: [{
+				association: 'produtos',
+				attributes: ['nome', "id", "categoria", 'imagem']
+			}],
+			order:[['id', 'DESC']],
+
+		})
+		let compras_com_produtos = await nota_completa_das_compras(compras)
+		res.json(compras_com_produtos)
     },
     adicionar_a_compra: async (req, res) => {
-        
+
         const { compra_id } = req.params;
         const registros = req.body
         // Atualizar estado da conta
@@ -204,8 +198,8 @@ module.exports = {
             itens: itens,
             total: itens.reduce((prevVal, elem) => prevVal + elem.preco_total, 0 )
         }
-        
-        
+
+
         return res.json(compra)
     },
     atualizar_item_compra:async(req, res) =>{
@@ -216,16 +210,16 @@ module.exports = {
         await atualizar_item_compra(item_id, quantidade),
         res.status(200).send()
 
-    }, 
+    },
     apagar_compra:async (req,res)=>{
         const {compra_id} = req.params
         try {
             await Compras.destroy({where:{id:compra_id}})
             res.status(200).send()
         } catch (error) {
-                
+
         }
-    }, 
+    },
     apagar_item_compra: async(req,res)=>{
         const { compra_id, item_id } = req.params
         const validacao = await valida_relacao_item_compra(compra_id, item_id)
@@ -239,7 +233,7 @@ module.exports = {
         // Apagar estoque
         // Retornar quantidade ao Produto
         // Apagar Compra Produto
-        
+
         // res.status(200).send()
     },
     lista_compras_dia: async(req,res)=>{
@@ -253,16 +247,16 @@ module.exports = {
         // ->> O estado da Conta
         // ->> Oque foi pago X preco total X oque vai ser pago
 
-        
+
         // Calcula valor total da conta e quanto foi pago
         const total_pago = await retorna_valor_já_pago(compra_id)
         const total = await preco_total_compra_por_id(compra_id)
-        
+
         // Registra quanto falta para ser pago
         let falta = total - total_pago
         // Verifica se a conta está paga
         if(compra.pago || falta == 0){compra.update({pago: 1});return res.json({"msg": "Conta já está paga!"})}
-        
+
         let troco = 0
         // Verifica se o valor que está sendo pago é menor ou igual ao que falta
         if (valor < falta){
@@ -276,7 +270,7 @@ module.exports = {
             falta = 0
         }
         if(falta == 0) compra.update({pago: 1})
-        
+
         if(troco) return res.json({troco })
         return res.json({'falta':falta })
 
