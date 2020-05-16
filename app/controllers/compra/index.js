@@ -5,6 +5,7 @@ const LivroCaixa = require('../../models/LivroCaixa');
 const Compras_Produtos = require('../../models/Compras_Produtos');
 const { adiciona_ao_estoque, retira_do_estoque } = require('../helpers/estoqueHelper')
 const { preco_total_compra_por_id, retorna_valor_já_pago } = require('../helpers/compraProduto')
+const { resumo_compra_individual } = require('../helpers/livroCaixaHelper')
 const { dia_atual} = require('../helpers/consultaDatas')
 
 const nota_completa_das_compras = async (compras) => {
@@ -18,8 +19,7 @@ const nota_completa_das_compras = async (compras) => {
 
         }
     })
-
-    const response =  compras.map(compra => {
+    const response = compras.map((compra, index) => {
         const produtos = compras_produtos.filter(prod => compra.id == prod.compra_id)
         let categorias = []
         produtos.filter(produto => {
@@ -32,7 +32,6 @@ const nota_completa_das_compras = async (compras) => {
                 return categorias.push({ categoria: produto.categoria, produtos: [produto] })
             }
         })
-
         return {
             "id": compra.id,
             "nome": compra.nome,
@@ -58,7 +57,7 @@ const nota_completa_das_compras = async (compras) => {
                     }
                 })
                 return categorias
-            })(),
+			})(),
             "preco_total": produtos.reduce((prevVal, elem) => prevVal + elem.preco_total, 0)
         }
     })
@@ -133,7 +132,8 @@ const listar_compra_por_id = async(compra_id)=>{
 }
 const lista_compras_abertas = async (req, res) => {
     let compras = await Compras.findAll({
-        where: { pago: false },
+		where: { pago: false },
+		order:[['id', 'DESC']],
         include: [{
             association: 'produtos',
             attributes: ['nome', "id", "categoria", 'imagem']
@@ -174,6 +174,8 @@ module.exports = {
 				association: 'produtos',
 				attributes: ['nome', "id", "categoria", 'imagem']
 			}],
+			order:[['id', 'DESC']],
+
 		})
 		let compras_com_produtos = await nota_completa_das_compras(compras)
 		res.json(compras_com_produtos)
