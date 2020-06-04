@@ -157,7 +157,7 @@ module.exports = {
                 where: { id: compra.id },
                 include: [{
                     association: 'produtos',
-                    attributes: ['nome', "id", "categoria"]
+                    attributes: ['nome', "id", "categoria", "imagem"]
                 }],
             })
             const compra_montada = await nota_completa_das_compras([lista_compras])
@@ -241,39 +241,39 @@ module.exports = {
         res.json(compras)
     },
     pagar: async (req, res)=>{
-        const {valor, modo, tipo_transacao} = req.body
+        const lista_pagamentos = req.body
         const {compra_id} = req.params
         const compra = await Compras.findByPk(compra_id)
-        // ->> O estado da Conta
-        // ->> Oque foi pago X preco total X oque vai ser pago
 
-
-        // Calcula valor total da conta e quanto foi pago
         const total_pago = await retorna_valor_já_pago(compra_id)
         const total = await preco_total_compra_por_id(compra_id)
 
-        // Registra quanto falta para ser pago
-        let falta = total - total_pago
-        // Verifica se a conta está paga
-        if(compra.pago || falta == 0){compra.update({pago: 1});return res.json({"msg": "Conta já está paga!"})}
+		console.log(lista_pagamentos)
+		let falta = total - total_pago
 
-        let troco = 0
-        // Verifica se o valor que está sendo pago é menor ou igual ao que falta
-        if (valor < falta){
-            //Atualiza o valor q falta para ser pago
-            falta = falta - valor
-            // Registra entrada no caixa
-            await LivroCaixa.create({ valor, modo, tipo_transacao , compra_id })
-        }else{
-            troco = valor - falta
-            await LivroCaixa.create({ valor: (troco > 0) ? falta : valor, modo, tipo_transacao , compra_id })
-            falta = 0
-        }
-        if(falta == 0) compra.update({pago: 1})
+		if(compra.pago || falta == 0){compra.update({pago: 1});return res.json({"msg": "Conta já está paga!"})}
 
-        if(troco) return res.json({troco })
-        return res.json({'falta':falta })
+		let troco = 0
+		let registros= null
+		let valor = lista_pagamentos.reduce((pValue, value) => value.valor + pValue,0)
+		registros = await LivroCaixa.bulkCreate(lista_pagamentos.map(({valor, modo, tipo_transacao}) => {
+			if (valor < falta){
+				falta = falta - valor
+				return {valor, modo, tipo_transacao, compra_id}
+			}else{
+				troco = valor - falta
+				falta = 0
+				return {valor, modo, tipo_transacao, compra_id}
+			}
+		}))
 
+        if(falta == 0){
+			compra.update({pago: 1})
+			return res.json({troco, registros, pago: total })
+		}
+
+		return res.json({pago: total - falta, registros })
+        // return res.json( {registros } )
     },
     testeSocket: async (req, res)=>{
 
