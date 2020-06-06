@@ -192,15 +192,15 @@ module.exports = {
     listar_pedidos_compra: async(req, res) => {
         const { compra_id } = req.params;
         const itens = await listar_compra_por_id(compra_id)
-        const dados_compra = await Compras.findByPk(compra_id)
-        let compra = {
-            dados:dados_compra,
-            itens: itens,
-            total: itens.reduce((prevVal, elem) => prevVal + elem.preco_total, 0 )
-        }
-
-
-        return res.json(compra)
+        const dados_compra = await Compras.findByPk(compra_id, {
+			include: [{
+				association: 'produtos',
+				attributes: ['nome', "id", "categoria", 'imagem']
+			}],
+			order:[['id', 'DESC']],
+		})
+		let compras_com_produtos = await nota_completa_das_compras([dados_compra])
+        return res.json(compras_com_produtos[0])
     },
     atualizar_item_compra:async(req, res) =>{
         const {compra_id, item_id} = req.params
@@ -304,15 +304,11 @@ module.exports = {
 			return produto
 		}
 		const alteraCampoPorID = async (valorRecebido, compra, campo) =>{
-			if(String(valorRecebido) != String(compra[campo])){
+			if(String(valorRecebido) !== String(compra[campo])){
 				let alterar ={}
 				alterar[campo] = valorRecebido
 				await Compras.update(alterar,
-				{
-					where:{
-						id: compra.id
-					}
-				})
+				{where:{id: compra.id}})
 			}
 		}
 
@@ -377,16 +373,16 @@ module.exports = {
 				await atualizar_item_da_compra(compra_id, compra_produto['id'], quantidade)
 			})
 		}
+
 		const {id} = req.body
 		const {nome, barqueiro, produtos} = req.body
 
 		const [compra, compra_produto] = await buscaDadosBanco()
 
 		const idsEstoqueRegistros = compra_produto.map(({estoque_id}) => estoque_id)
-		console.log(idsEstoqueRegistros)
-		console.log(nome, barqueiro, produtos)
-		await alteraCampoPorID(nome, compra, 'nome')
-		await alteraCampoPorID(barqueiro, compra, 'barqueiro')
+		console.log(nome, barqueiro)
+		nome && await alteraCampoPorID(nome, compra, 'nome')
+		barqueiro && await alteraCampoPorID(barqueiro, compra, 'barqueiro')
 		await diffProdutos(
 			produtos,
 			compra_produto.map(({id, quantidade, preco_total, produto_id, estoque_id}) => ({id, quantidade, preco_total, produto_id, estoque_id})),
