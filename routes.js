@@ -38,6 +38,7 @@ routes.get('/produtos/categorias', ProdutosController.list_categorias)
 //Compras
 routes.post('/compras', ComprasController.inserir_compra)
 routes.post('/compras/:compra_id/inserir', ComprasController.adicionar_a_compra)
+routes.post('/compras/:compra_id/editar', ComprasController.editar)
 routes.post('/compras/:compra_id/pagar', ComprasController.pagar)
 routes.post('/compras/:compra_id/:item_id', ComprasController.atualizar_item_compra)
 

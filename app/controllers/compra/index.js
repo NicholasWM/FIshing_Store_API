@@ -280,5 +280,120 @@ module.exports = {
         await req.io.emit('testando', req.body.msg);
 
         return res.json({'msg':1})
-    }
+	},
+	editar: async (req, res) => {
+		const adicionar_a_compra = async (compra_id, registros) => {
+			// Atualizar estado da conta
+			const compra = await Compras.findByPk(compra_id)
+			compra.update({pago: 0})
+			return await insere_produtos_na_compra(registros, compra_id)
+		}
+		const atualizar_item_da_compra = async(compra_id, item_id, quantidade) =>{
+			const validacao = await valida_relacao_item_compra(compra_id, item_id)
+			!!validacao?res.json(validacao):null
+			return await atualizar_item_compra(item_id, quantidade)
+		}
+		const apagar_item_compra =  async(compra_id, item_id)=>{
+			const validacao = await valida_relacao_item_compra(compra_id, item_id)
+			!!validacao ? res.json(validacao) : null
+			const compra_produto = await Compras_Produtos.findByPk(item_id)
+			await Estoque.destroy({where:{id:compra_produto.estoque_id}})
+			produto = await Produtos.findByPk(compra_produto.produto_id)
+			produto.update({quantidade: produto.quantidade+compra_produto.quantidade})
+			await Compras_Produtos.destroy({where:{id:compra_produto.id}})
+			return produto
+		}
+		const alteraCampoPorID = async (valorRecebido, compra, campo) =>{
+			if(String(valorRecebido) != String(compra[campo])){
+				let alterar ={}
+				alterar[campo] = valorRecebido
+				await Compras.update(alterar,
+				{
+					where:{
+						id: compra.id
+					}
+				})
+			}
+		}
+
+		const buscaDadosBanco = async ()=>{
+			const compra = await Compras.findByPk(id)
+			const compra_produto = await Compras_Produtos.findAll({
+				where:{
+					compra_id: id
+				}
+			})
+			return [compra, compra_produto]
+		}
+
+		const diffProdutos = async (listaProdutosAtuais, listaProdutosAntigos, compra_id) => {
+
+			const mapeiaItensDeletados = () => listaProdutosAntigos.filter(atual => {
+					let existe = false
+					listaProdutosAtuais.forEach(element => {
+						if(atual["produto_id"] == element["produto_id"]){
+							existe = true
+						}
+					});
+					return !existe
+			})
+			const mapeiaItensAdicionados = () => listaProdutosAtuais.filter(atual => {
+					let existe = false
+					listaProdutosAntigos.forEach(element => {
+						if(atual["produto_id"] == element["produto_id"]){
+							existe = true
+						}
+					});
+					return !existe
+			})
+
+			const mapeiaItensAlterados = () => listaProdutosAtuais.filter(atual => {
+				let alterado = false
+				listaProdutosAntigos.forEach(element => {
+					if(atual["produto_id"] == element["produto_id"]){
+						if(atual["quantidade"] != element["quantidade"]){
+							alterado = true
+						}
+					}
+				});
+				return alterado
+			})
+			let atualizar = mapeiaItensAlterados()
+			let inserir = mapeiaItensAdicionados()
+			let deletar = mapeiaItensDeletados()
+			console.log("Deletar: ", deletar)
+			console.log("Inserir: ", inserir)
+			console.log("Atualizar: ", atualizar)
+
+			inserir.length && await adicionar_a_compra(compra_id, inserir)
+
+			deletar.forEach(async (item) => await apagar_item_compra(compra_id, item.id))
+
+			atualizar.forEach(async ({produto_id,quantidade}) => {
+				const compra_produto = await Compras_Produtos.findOne({
+					where:{compra_id, produto_id},
+					attributes: ['id']
+				}, )
+				await atualizar_item_da_compra(compra_id, compra_produto['id'], quantidade)
+			})
+		}
+		const {id} = req.body
+		const {nome, barqueiro, produtos} = req.body
+
+		const [compra, compra_produto] = await buscaDadosBanco()
+
+		const idsEstoqueRegistros = compra_produto.map(({estoque_id}) => estoque_id)
+		console.log(idsEstoqueRegistros)
+		console.log(nome, barqueiro, produtos)
+		await alteraCampoPorID(nome, compra, 'nome')
+		await alteraCampoPorID(barqueiro, compra, 'barqueiro')
+		await diffProdutos(
+			produtos,
+			compra_produto.map(({id, quantidade, preco_total, produto_id, estoque_id}) => ({id, quantidade, preco_total, produto_id, estoque_id})),
+			id
+		)
+
+		return res.json({res:true})
+	}
+
 }
